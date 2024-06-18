@@ -129,8 +129,10 @@ std::tuple<int, int, double> parseEdge(const std::string &edge_string) {
     return std::make_tuple(a, b, w);
 }
 
-bool checkMcEdgelist(const std::vector<std::tuple<int, int, double>> &edgelist) {
-    for (auto edge: edgelist) {
+bool checkMcEdgelist(std::vector<std::tuple<int, int, double>> &edgelist) {
+    auto rmVec = std::vector< int >();
+    for (size_t i = 0; i < edgelist.size(); ++i) {
+        auto edge = edgelist[i];
         int u = std::get<0>(edge);
         int v = std::get<1>(edge);
         if (u == v) {
@@ -138,10 +140,19 @@ bool checkMcEdgelist(const std::vector<std::tuple<int, int, double>> &edgelist) 
         }
         double w = std::get<2>(edge);
         if (w == 0) {
-            throw std::runtime_error("Zero weight edge: (" +
-                                     std::to_string(u) + ", " + std::to_string(v) + ").");
+            // throw std::runtime_error("Zero weight edge: (" +
+            //                          std::to_string(u) + ", " + std::to_string(v) + ").");
+            std::cout << "Zero weight edge: (" << u << ", " << v << ")." << std::endl;
+            rmVec.push_back(i);
         }
     }
+
+    // rm edges with 0 weight with reverse order to not mess up the indices
+    for (int i = rmVec.size() - 1; i >= 0; --i) {
+        std::cout << "Removing edge: " << std::get<0>(edgelist[rmVec[i]]) << " " << std::get<1>(edgelist[rmVec[i]]) << std::endl;
+        edgelist.erase(std::next(edgelist.begin(), rmVec[i]));
+    }
+    
     return true;
 }
 
@@ -162,16 +173,32 @@ McObj fileToMcObj(const std::string &path) {
 }
 
 
+std::string trim(const std::string& str) {
+    size_t first = str.find_first_not_of(" \t\n\r\f\v");
+    if (std::string::npos == first) {
+        return str;
+    }
+    size_t last = str.find_last_not_of(" \t\n\r\f\v");
+    return str.substr(first, (last - first + 1));
+}
+
 std::vector<std::string> splitString(std::string input, char delimiter) {
+    input = trim(input); // trim the input string
     std::vector<std::string> res = std::vector<std::string>();
 
-    ulong p;
-    while ((p = input.find(delimiter)) != std::string::npos) {
-        res.push_back(input.substr(0, p));
-        input.erase(0, p + 1);
-    }
+    ulong p = 0;
+    ulong q = input.find(delimiter);
+    while (q != std::string::npos) {
+        if (q != p) {
+            res.push_back(input.substr(p, q - p));
+        }
+        p = ++q;
+        q = input.find(delimiter, q);
 
-    res.push_back(input);
+        if (q == std::string::npos) {
+            res.push_back(input.substr(p, input.size()));
+        }
+    }
 
     return res;
 }

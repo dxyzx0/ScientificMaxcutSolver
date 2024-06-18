@@ -57,7 +57,7 @@ std::vector<std::tuple<int, int, double>> parseEdgelist(const std::vector<std::s
 
 std::tuple<int, int, double> parseEdge(const std::string &edge_string);
 
-bool checkMcEdgelist(const std::vector<std::tuple<int, int, double>> &edgelist);
+bool checkMcEdgelist(std::vector<std::tuple<int, int, double>> &edgelist);  // FIXME: removed const to deal with 0 weight edges
 
 bool checkBqEdgelist(const std::vector<std::tuple<int, int, double>> &edgelist);
 
